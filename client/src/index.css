@@ -1,3 +1,79 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-white text-black;
+  }
+}
+
+@layer components {
+  /* ── Input Field ─────────────────────────────────────────────────────── */
+  .input-field {
+    @apply w-full px-4 py-3 text-sm border border-gray-200 rounded-lg bg-white text-black placeholder-gray-400
+           focus:outline-none focus:border-black focus:ring-1 focus:ring-black
+           transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  /* ── Primary Button ──────────────────────────────────────────────────── */
+  .btn-primary {
+    @apply w-full py-3 px-4 bg-black text-white text-sm font-medium rounded-lg
+           hover:bg-gray-800 active:bg-gray-900
+           focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2
+           transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed
+           flex items-center justify-center gap-2;
+  }
+
+  /* ── Ghost / Secondary Button ────────────────────────────────────────── */
+  .btn-ghost {
+    @apply w-full py-3 px-4 bg-white text-black text-sm font-medium rounded-lg
+           border border-gray-200 hover:border-black hover:bg-gray-50 active:bg-gray-100
+           focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2
+           transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed
+           flex items-center justify-center gap-2;
+  }
+
+  /* ── Auth Card Container ─────────────────────────────────────────────── */
+  .auth-card {
+    @apply w-full max-w-sm bg-white border border-gray-100 rounded-2xl p-8 shadow-sm;
+  }
+
+  /* ── Label ───────────────────────────────────────────────────────────── */
+  .field-label {
+    @apply block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1.5;
+  }
+
+  /* ── OTP digit input ─────────────────────────────────────────────────── */
+  .otp-digit {
+    @apply w-12 h-14 text-center text-xl font-semibold border border-gray-200 rounded-lg bg-white text-black
+           focus:outline-none focus:border-black focus:ring-1 focus:ring-black
+           transition-all duration-150;
+  }
+
+  /* ── Divider text ────────────────────────────────────────────────────── */
+  .divider-text {
+    @apply text-xs text-gray-400 text-center relative;
+  }
+}
+
+/* Spinner animation */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.animate-spin {
+  animation: spin 0.7s linear infinite;
+}

@@ -6,6 +6,9 @@ import redis from './src/configs/redis.config.js';
 import { initSocket } from './src/configs/socket.config.js';
 import mongoose from 'mongoose';
 
+// Importing the mail worker registers and starts the background job processor
+import mailWorker from './src/workers/mail.worker.js';
+
 // Connect to MongoDB
 connectDB();
 
@@ -16,16 +19,25 @@ initSocket(server);
 
 server.listen(env.port, () => {
   console.log(`Server running on port ${env.port} in mode: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`[MailWorker] Email queue worker is active`);
 });
 
-// Handle graceful shutdown
+// ── Graceful shutdown — close all connections cleanly ─────────────────────────
 const gracefulShutdown = async (signal) => {
   console.log(`\nReceived ${signal}. Starting graceful shutdown...`);
-  
-  // Close HTTP server
+
+  // Stop accepting new HTTP requests
   server.close(() => {
     console.log('HTTP server closed.');
   });
+
+  // Let the mail worker finish its current job before stopping
+  try {
+    await mailWorker.close();
+    console.log('[MailWorker] Mail worker closed.');
+  } catch (err) {
+    console.error('[MailWorker] Error closing mail worker:', err.message);
+  }
 
   // Close MongoDB connection
   try {
