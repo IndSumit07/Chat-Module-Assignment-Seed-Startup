@@ -1,0 +1,28 @@
+1. Technology Stack
+    a. Use Node.js.
+    b. Use Express.js.
+    c. Use MongoDB as the database.
+
+2. Architecture
+    a. Follow a clean and modular project structure.
+    b. Keep the Chat Service independent of the Authentication Module.
+    c. Integrate with the existing authentication middleware (req.user).
+
+3. Code Quality
+    a. Write clean, readable, and maintainable code.
+    b. Follow backend development best practices.
+    c. Separate concerns (routes, controllers, models, middleware, etc.).
+
+4. Project Organization
+
+    Follow the recommended structure:
+    
+    project/
+    ├── config/
+    ├── controllers/
+    ├── middleware/
+    ├── models/
+    ├── routes/
+    ├── .env.example
+    ├── package.json
+    └── server.js

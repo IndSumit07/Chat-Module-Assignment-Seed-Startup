@@ -1,0 +1,16 @@
+1. Conversation Management
+    a. Create a Conversation
+    b. Add one or more participants
+    c. Retrieve all conversations of authenticated user
+
+2. Message Management
+    a. Send messages
+    b. Retrieve all messages of a conversation
+    c. Store timestamp of each messages
+    d. Associate each Message with its sender 
+    e. Ensure every message belongs to a valid conversation
+
+3. Authorization
+    a. Only authenticated users can access protected APIs
+    b. Users can access only the conversations they are part of
+    c. Users cannot send messages to conversations they are not part of
