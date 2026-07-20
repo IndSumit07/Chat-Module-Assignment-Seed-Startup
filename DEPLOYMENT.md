@@ -1,141 +1,59 @@
-# Deployment Guide (EC2 & Vercel)
+# Frontend Deployment Guide (Vercel)
 
-This guide covers the step-by-step process of deploying the Chat Service. The frontend will be deployed on Vercel with automatic CI/CD, and the backend will be deployed on an AWS EC2 instance using **Docker Compose** and **Nginx** as a reverse proxy, along with a GitHub Actions workflow for auto-sync.
+This guide covers the step-by-step process of deploying the Chat Service frontend. We will use **Vercel**, which provides native support for Vite and React applications, along with built-in automated deployments (CI/CD) directly from your GitHub repository.
 
 ---
 
-## 1. Frontend Deployment (Vercel)
+## 1. Preparing for Deployment
 
-Vercel provides native support for Vite and React apps with built-in CI/CD.
+Before deploying, ensure your code is pushed to your GitHub repository and your frontend environment variables are ready.
+
+1. Commit and push all your frontend changes to the `main` branch on GitHub:
+   ```bash
+   git add .
+   git commit -m "Prepare for frontend deployment"
+   git push origin main
+   ```
+
+2. Make sure you have your production backend API URL ready (e.g., `https://api.yourdomain.com`), as you will need to provide this to Vercel so the frontend knows where to connect.
+
+---
+
+## 2. Deploying on Vercel
+
+Vercel makes deploying frontend applications incredibly simple. It will automatically detect Vite and configure the build settings for you.
 
 ### Steps:
-1. Push your entire repository to GitHub.
-2. Log in to [Vercel](https://vercel.com/) and click **Add New Project**.
-3. Import your GitHub repository.
-4. **Configure the Project**:
-   - **Framework Preset**: Vite
-   - **Root Directory**: `client` *(Important! Edit this to point to the client folder)*.
-   - **Build Command**: `npm run build`
-   - **Output Directory**: `dist`
-5. **Environment Variables**: Add your frontend environment variables (e.g., `VITE_API_URL` pointing to `https://api.yourdomain.com`).
-6. Click **Deploy**. Vercel will automatically sync and redeploy whenever you push to the `main` branch.
+1. **Log in to Vercel**: Go to [Vercel](https://vercel.com/) and log in using your GitHub account.
+2. **Import Project**: Click the **Add New Project** button.
+3. **Select Repository**: Find your Chat Service repository in the list and click **Import**.
+4. **Configure Project Settings**:
+   - **Project Name**: `chat-service-client` (or whatever you prefer)
+   - **Framework Preset**: Vercel should auto-detect **Vite**. If not, select it from the dropdown.
+   - **Root Directory**: Click `Edit` and select the **`client`** folder. *(This is extremely important since your repo has both client and server folders!)*
+5. **Build and Output Settings** (These should be auto-filled by Vite):
+   - Build Command: `npm run build`
+   - Output Directory: `dist`
+   - Install Command: `npm install`
+6. **Environment Variables**:
+   - Expand the "Environment Variables" section.
+   - Add your production variables. For example:
+     - **Name**: `VITE_API_URL`
+     - **Value**: `https://api.yourdomain.com` (Your EC2 backend URL)
+7. **Deploy**: Click the **Deploy** button. Vercel will now install dependencies, build your Vite app, and publish it to a live URL.
 
 ---
 
-## 2. Backend Deployment (AWS EC2)
+## 3. Automated Deployment (CI/CD)
 
-We will set up an EC2 instance (Ubuntu), install Docker and Nginx, and run the Node.js server alongside Redis in a Docker Compose network. Nginx will handle SSL and route external traffic to the Docker container.
+One of the biggest advantages of using Vercel is its native GitHub integration, which eliminates the need to write custom GitHub Actions workflows for the frontend.
 
-### A. Server Setup & Dependencies
-1. Launch an EC2 instance (Ubuntu 22.04/24.04 LTS).
-2. Configure Security Group: Open ports **22 (SSH)**, **80 (HTTP)**, and **443 (HTTPS)**.
-3. SSH into your instance:
-   ```bash
-   ssh -i your-key.pem ubuntu@your-ec2-ip
-   ```
-4. Install Nginx and Docker:
-   ```bash
-   # Update packages
-   sudo apt update && sudo apt upgrade -y
+### How it works automatically:
+1. **Push to GitHub**: Whenever you make changes to your frontend code and push them to the `main` branch on GitHub, Vercel is immediately notified via webhooks.
+2. **Automatic Rebuild**: Vercel automatically starts a new deployment, running your build command (`npm run build`).
+3. **Zero-Downtime Release**: Once the build succeeds, Vercel instantly swaps the old version with the new version. Your users will never experience downtime.
 
-   # Install Nginx
-   sudo apt install nginx -y
+### Preview Deployments (Optional but recommended):
+If you open a Pull Request in your GitHub repository, Vercel will automatically generate a temporary "Preview URL". This allows you to test your frontend changes in a live environment before merging them into the `main` branch. 
 
-   # Install Docker and Docker Compose
-   sudo apt install docker.io docker-compose-v2 -y
-   sudo systemctl enable docker
-   sudo systemctl start docker
-   sudo usermod -aG docker ubuntu
-   ```
-   *(Note: You may need to log out and log back in for the `docker` group changes to take effect).*
-
-### B. Setup the Backend Application
-1. Clone your repository on the EC2 instance:
-   ```bash
-   git clone https://github.com/yourusername/your-repo.git
-   cd your-repo
-   ```
-2. Create your server `.env` file:
-   ```bash
-   nano server/.env
-   # Add all your production environment variables 
-   # (MongoDB URI, JWT Secret, Brevo, AWS S3 keys, etc.)
-   ```
-
-### C. Running with Docker Compose
-To build the server image and run both Redis and the Node API in detached mode:
-```bash
-docker compose up -d --build
-```
-This will expose the API internally on port `5000`.
-
-### D. Nginx Reverse Proxy & SSL
-Configure Nginx to listen to your custom API domain and proxy requests (including WebSockets) to the Docker container running on port `5000`.
-
-1. Create a new Nginx configuration:
-   ```bash
-   sudo nano /etc/nginx/sites-available/chat-api
-   ```
-2. Add the following config (replace `api.yourdomain.com` with your domain):
-   ```nginx
-   server {
-       listen 80;
-       server_name api.yourdomain.com;
-
-       location / {
-           proxy_pass http://localhost:5000;
-           proxy_http_version 1.1;
-           proxy_set_header Upgrade $http_upgrade;
-           proxy_set_header Connection 'upgrade';
-           proxy_set_header Host $host;
-           proxy_cache_bypass $http_upgrade;
-       }
-   }
-   ```
-3. Enable the site and restart Nginx:
-   ```bash
-   sudo ln -s /etc/nginx/sites-available/chat-api /etc/nginx/sites-enabled/
-   sudo nginx -t
-   sudo systemctl restart nginx
-   ```
-4. Install Certbot and secure with SSL (HTTPS):
-   ```bash
-   sudo apt install certbot python3-certbot-nginx -y
-   sudo certbot --nginx -d api.yourdomain.com
-   ```
-
----
-
-## 3. Auto-Sync (CI/CD) with GitHub Actions
-
-To automatically deploy the backend to EC2 when you push to the `main` branch, we use a GitHub Actions workflow.
-
-### A. Create Deployment Script on EC2
-On your EC2 instance, create a script that pulls the latest code and rebuilds the containers:
-```bash
-nano /home/ubuntu/deploy.sh
-```
-Add the following content:
-```bash
-#!/bin/bash
-cd /home/ubuntu/your-repo
-git pull origin main
-docker compose up -d --build
-```
-Make it executable:
-```bash
-chmod +x /home/ubuntu/deploy.sh
-```
-
-### B. Add GitHub Secrets
-Go to your GitHub Repository -> **Settings -> Secrets and variables -> Actions**. Add:
-- `EC2_HOST`: Your EC2 public IP or domain.
-- `EC2_USERNAME`: `ubuntu`
-- `EC2_SSH_KEY`: The contents of your `.pem` private key file.
-
-### C. GitHub Actions Workflow
-The project includes a `.github/workflows/deploy.yml` file that triggers deployment whenever changes are pushed to the `server/` directory or `docker-compose.yml`.
-
-With this setup:
-1. Every time you push changes affecting the `client/` directory, **Vercel** will automatically rebuild and deploy.
-2. Every time you push changes affecting the backend, **GitHub Actions** will securely SSH into your EC2 instance, pull the latest code, and seamlessly rebuild and restart your Docker containers.
+*(Note: Because Vercel handles all of this natively through its GitHub app integration, you do **not** need to create a `.github/workflows` YAML file for the frontend!)*
