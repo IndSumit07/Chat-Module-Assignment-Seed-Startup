@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Search, Plus, Hash, Settings, Bell, MessageSquare, Loader2, RefreshCw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { getMyConversations, createConversation } from '../api/conversation.js';
+import { createConversation } from '../api/conversation.js';
 import NotificationPanel from './NotificationPanel.jsx';
 
 export default function Sidebar({
@@ -46,9 +46,9 @@ export default function Sidebar({
   };
 
   return (
-    <div className="w-72 bg-gray-50 flex flex-col h-full border-r border-gray-200 flex-shrink-0 relative">
+    <div className="w-full h-full bg-gray-50 flex flex-col border-r border-gray-200 relative">
       {/* ── Header ──────────────────────────────────────────────────────────── */}
-      <div className="px-4 py-4 flex items-center justify-between">
+      <div className="px-4 py-4 flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 bg-black rounded-lg flex items-center justify-center">
             <MessageSquare className="w-3.5 h-3.5 text-white" />
@@ -84,7 +84,7 @@ export default function Sidebar({
       </div>
 
       {/* ── Search & Actions ────────────────────────────────────────────────── */}
-      <div className="px-4 pb-4 border-b border-gray-200 space-y-3">
+      <div className="px-4 pb-4 border-b border-gray-200 space-y-3 flex-shrink-0">
         <div className="relative">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
@@ -165,8 +165,10 @@ export default function Sidebar({
                       activeId === conv._id ? 'text-gray-300' : 'text-gray-500'
                     }`}
                   >
-                    {conv.lastMessage?.text || 
-                     (conv.lastMessage?.attachments?.length > 0 ? `[${conv.lastMessage.attachments.length} Attachment${conv.lastMessage.attachments.length > 1 ? 's' : ''}]` : 'No messages yet')}
+                    {conv.lastMessage?.text ||
+                     (conv.lastMessage?.attachments?.length > 0
+                       ? `[${conv.lastMessage.attachments.length} Attachment${conv.lastMessage.attachments.length > 1 ? 's' : ''}]`
+                       : 'No messages yet')}
                   </p>
                 </div>
               </div>

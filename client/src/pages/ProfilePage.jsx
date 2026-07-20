@@ -92,7 +92,7 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-gray-50">
       {/* ── Top Navigation Bar ─────────────────────────────────────────── */}
       <header className="bg-white border-b border-gray-100 sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-6 h-14 flex items-center justify-between">
+        <div className="max-w-4xl mx-auto px-4 md:px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button
               onClick={() => navigate('/dashboard')}
@@ -123,11 +123,11 @@ export default function ProfilePage() {
       </header>
 
       {/* ── Page Content ───────────────────────────────────────────────── */}
-      <main className="max-w-4xl mx-auto px-6 py-10 space-y-6">
+      <main className="max-w-4xl mx-auto px-4 md:px-6 py-8 md:py-10 space-y-6">
         <h1 className="text-2xl font-bold text-black mb-8">Profile settings</h1>
 
         {/* ── Profile Card ──────────────────────────────────────────── */}
-        <div className="bg-white border border-gray-100 rounded-2xl p-6">
+        <div className="bg-white border border-gray-100 rounded-2xl p-5 md:p-6">
           <div className="flex items-center gap-4">
             {/* Avatar */}
             <div className="relative group">
@@ -147,11 +147,11 @@ export default function ProfilePage() {
                 {uploadingAvatar ? <Loader2 className="w-5 h-5 text-white animate-spin" /> : <span className="text-xs text-white font-medium">Edit</span>}
               </button>
             </div>
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <h2 className="text-lg font-semibold text-black truncate">{user?.username}</h2>
               <p className="text-sm text-gray-500 truncate">{user?.email}</p>
             </div>
-            <div className="ml-auto flex-shrink-0">
+            <div className="flex-shrink-0">
               <span className="inline-flex items-center gap-1 text-xs font-medium text-green-700 bg-green-50 border border-green-100 px-2.5 py-1 rounded-full">
                 <CheckCircle className="w-3 h-3" />
                 Verified
@@ -159,7 +159,7 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          <div className="mt-5 pt-5 border-t border-gray-50 grid grid-cols-2 gap-4">
+          <div className="mt-5 pt-5 border-t border-gray-50 grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <p className="text-xs text-gray-400 uppercase tracking-wider">Member since</p>
               <p className="text-sm font-medium text-black mt-1">

@@ -12,6 +12,11 @@ import toast from 'react-hot-toast';
  *
  * This is the main application interface, consisting of the Sidebar (conversations)
  * and the ChatWindow (active conversation). It initializes the Socket.io connection.
+ *
+ * On mobile (<md), the layout uses a single-panel pattern:
+ *   - mobileView='sidebar' → shows only the Sidebar
+ *   - mobileView='chat'    → shows only the ChatWindow
+ * On desktop (>=md), both panels are always visible side-by-side.
  */
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -22,6 +27,9 @@ export default function DashboardPage() {
   const [notificationCount, setNotificationCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
+  // Controls which panel is visible on mobile
+  const [mobileView, setMobileView] = useState('sidebar'); // 'sidebar' | 'chat'
+
   // ── Initial Data Load ────────────────────────────────────────────────────────
   const fetchConversations = useCallback(async () => {
     try {
@@ -31,6 +39,7 @@ export default function DashboardPage() {
       // If active conversation is no longer in list (e.g. left), deselect it
       if (activeConv && !(data.data || []).some(c => c._id === activeConv._id)) {
         setActiveConv(null);
+        setMobileView('sidebar');
       } else if (activeConv) {
         // Refresh active conversation metadata
         const updated = (data.data || []).find(c => c._id === activeConv._id);
@@ -61,10 +70,8 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!socket) return;
 
-    // Refresh conversation list on any updates
     const handleConversationUpdated = () => fetchConversations();
 
-    // Increment notification count on new notification
     const handleNotification = ({ unreadCount, notification }) => {
       setNotificationCount(unreadCount);
       toast.success(notification.title, {
@@ -73,9 +80,7 @@ export default function DashboardPage() {
       });
     };
 
-    // Increment notification count on new invitation
     const handleInvitation = ({ invitation }) => {
-      // Let notification handle the count bump; just show the toast
       toast(`You've been invited to ${invitation.conversationId.name}`, {
         icon: '📩',
         style: { fontSize: '12px' },
@@ -98,6 +103,7 @@ export default function DashboardPage() {
   // ── Handlers ────────────────────────────────────────────────────────────────
   const handleSelectConversation = (conv) => {
     setActiveConv(conv);
+    setMobileView('chat'); // Switch to chat panel on mobile
     // Optimistically clear unread count for this conv in the sidebar
     setConversations((prev) =>
       prev.map((c) => (c._id === conv._id ? { ...c, unreadCount: 0 } : c))
@@ -109,20 +115,43 @@ export default function DashboardPage() {
     handleSelectConversation(newConv);
   };
 
+  const handleMobileBack = () => {
+    setMobileView('sidebar');
+  };
+
   return (
     <div className="h-screen w-full bg-white flex overflow-hidden">
-      <Sidebar
-        conversations={conversations}
-        activeId={activeConv?._id}
-        onSelect={handleSelectConversation}
-        unreadCount={notificationCount}
-        onUnreadCountChange={setNotificationCount}
-        onCreateSuccess={handleCreateSuccess}
-        loading={loading}
-        onRefresh={fetchConversations}
-      />
-      <div className="flex-1 flex flex-col min-w-0 bg-white">
-        <ChatWindow conversation={activeConv} socket={socket} />
+      {/* Sidebar: full-screen on mobile when mobileView==='sidebar', fixed width on desktop */}
+      <div
+        className={`
+          ${mobileView === 'sidebar' ? 'flex' : 'hidden'}
+          md:flex w-full md:w-72 flex-col flex-shrink-0
+        `}
+      >
+        <Sidebar
+          conversations={conversations}
+          activeId={activeConv?._id}
+          onSelect={handleSelectConversation}
+          unreadCount={notificationCount}
+          onUnreadCountChange={setNotificationCount}
+          onCreateSuccess={handleCreateSuccess}
+          loading={loading}
+          onRefresh={fetchConversations}
+        />
+      </div>
+
+      {/* ChatWindow: full-screen on mobile when mobileView==='chat', flex-1 on desktop */}
+      <div
+        className={`
+          ${mobileView === 'chat' ? 'flex' : 'hidden'}
+          md:flex flex-1 flex-col min-w-0 bg-white
+        `}
+      >
+        <ChatWindow
+          conversation={activeConv}
+          socket={socket}
+          onBack={handleMobileBack}
+        />
       </div>
     </div>
   );

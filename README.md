@@ -33,6 +33,7 @@ A full-stack, real-time chat application built with modern web technologies, foc
 - **Email Verification (OTP)**: Secure registration, login, and password resets using background email queues.
 - **Media Attachments**: Secure file uploads to AWS S3.
 - **Cross-Instance Pub/Sub**: Highly scalable real-time events that work across multiple server instances using Redis Pub/Sub.
+- **Fully Responsive**: Mobile-first layout with a sidebar/chat drawer pattern — works seamlessly on phones, tablets, and desktops.
 
 ---
 
