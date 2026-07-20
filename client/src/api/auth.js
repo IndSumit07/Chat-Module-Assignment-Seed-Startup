@@ -43,3 +43,7 @@ export const logoutUser = () =>
 /** Update user profile information */
 export const updateProfile = (data) =>
   api.patch('/auth/profile', data);
+
+/** Resend verification OTP to the given email (for unverified accounts only) */
+export const resendVerifyOtp = (data) =>
+  api.post('/auth/resend-otp', data);

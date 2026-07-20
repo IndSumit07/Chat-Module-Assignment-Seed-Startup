@@ -42,8 +42,23 @@ const useSocket = (enabled = true) => {
         console.log('[Socket] Disconnected:', reason);
       });
 
+      socketInstance.on('reconnect', (attempt) => {
+        console.log(`[Socket] Reconnected after ${attempt} attempt(s)`);
+      });
+
       socketInstance.on('connect_error', (err) => {
         console.error('[Socket] Connection error:', err.message);
+        // Redirect to login on authentication failures to avoid infinite retry
+        const isAuthError =
+          err.message.toLowerCase().includes('authentication') ||
+          err.message.toLowerCase().includes('token') ||
+          err.message.toLowerCase().includes('unauthorized');
+
+        if (isAuthError) {
+          console.warn('[Socket] Auth error — redirecting to login');
+          disconnectSocket();
+          window.location.href = '/login';
+        }
       });
     }
 

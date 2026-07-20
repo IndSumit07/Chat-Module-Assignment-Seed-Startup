@@ -30,6 +30,13 @@ export default function DashboardPage() {
   // Controls which panel is visible on mobile
   const [mobileView, setMobileView] = useState('sidebar'); // 'sidebar' | 'chat'
 
+  // Disconnect socket when the dashboard unmounts (user logs out or navigates away)
+  useEffect(() => {
+    return () => {
+      disconnectSocket();
+    };
+  }, []);
+
   // ── Initial Data Load ────────────────────────────────────────────────────────
 
   // Use a ref so fetchConversations can read the current activeConv without

@@ -95,6 +95,30 @@ export const verifyRegisterOtp = asyncHandler(async (req, res) => {
   );
 });
 
+/**
+ * POST /auth/resend-otp
+ *
+ * Resends a fresh OTP for registration email verification.
+ * Requires the user account to exist and be unverified.
+ */
+export const resendOtp = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) throw new ApiError(400, 'Email is required.');
+
+  const user = await AuthService.findUserByEmail(email.toLowerCase().trim());
+  if (!user) throw new ApiError(404, 'No account found with this email. Please register first.');
+  if (user.isVerified) throw new ApiError(400, 'This account is already verified. Please log in.');
+
+  const otp = OtpService.generateOtp();
+  await OtpService.storeOtp('register', email, otp);
+  await sendOtpEmail(email, user.username, otp, 'register');
+
+  return res.status(200).json(
+    new ApiResponse(200, 'A new verification OTP has been sent to your email.')
+  );
+});
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Login
 // ─────────────────────────────────────────────────────────────────────────────

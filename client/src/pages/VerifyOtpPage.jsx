@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { Loader2, MailCheck, ArrowLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { verifyRegisterOtp, registerUser } from '../api/auth.js';
+import { verifyRegisterOtp, resendVerifyOtp } from '../api/auth.js';
 
 const OTP_LENGTH = 6;
 
@@ -80,8 +80,7 @@ export default function VerifyOtpPage() {
   const handleResend = async () => {
     setResending(true);
     try {
-      // Re-register with the same email triggers a new OTP
-      await registerUser({ email, username: location.state?.username || '', password: location.state?.password || '' });
+      await resendVerifyOtp({ email });
       toast.success('New OTP sent to your email.');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Could not resend OTP.');

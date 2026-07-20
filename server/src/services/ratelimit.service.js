@@ -44,21 +44,28 @@ export const checkRateLimit = async (action, identifier) => {
   const now = Date.now();
   const windowStart = now - policy.window;
 
-  // Atomic pipeline: prune stale → count → record
-  const pipeline = redis.pipeline();
-  pipeline.zremrangebyscore(key, '-inf', windowStart);
-  pipeline.zcard(key);
-  pipeline.zadd(key, now, `${now}-${Math.random()}`); // Unique member to allow same-ms entries
-  pipeline.expire(key, Math.ceil(policy.window / 1000) + 5);
+  try {
+    // Atomic pipeline: prune stale → count → record
+    const pipeline = redis.pipeline();
+    pipeline.zremrangebyscore(key, '-inf', windowStart);
+    pipeline.zcard(key);
+    pipeline.zadd(key, now, `${now}-${Math.random()}`); // Unique member to allow same-ms entries
+    pipeline.expire(key, Math.ceil(policy.window / 1000) + 5);
 
-  const results = await pipeline.exec();
-  const count = results[1][1]; // Current count after pruning (before adding this request)
+    const results = await pipeline.exec();
+    const count = results[1][1]; // Current count after pruning (before adding this request)
 
-  if (count >= policy.limit) {
-    throw new ApiError(
-      429,
-      `Too many ${action} requests. Please slow down and try again shortly.`
-    );
+    if (count >= policy.limit) {
+      throw new ApiError(
+        429,
+        `Too many ${action} requests. Please slow down and try again shortly.`
+      );
+    }
+  } catch (err) {
+    // Re-throw 429s — they are intentional rate limit enforcements
+    if (err instanceof ApiError && err.statusCode === 429) throw err;
+    // For any other error (Redis unavailable etc.), fail-open with a warning
+    console.warn(`[RateLimit] Redis unavailable for action "${action}" — allowing request: ${err.message}`);
   }
 };
 

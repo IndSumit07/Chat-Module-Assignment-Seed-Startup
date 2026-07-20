@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import {
   register,
+  resendOtp,
   verifyRegisterOtp,
   login,
   verifyLoginOtp,
@@ -18,6 +19,7 @@ const router = Router();
 
 // ── Public routes — no authentication required ────────────────────────────────
 router.post('/register',           register);
+router.post('/resend-otp',         resendOtp);
 router.post('/verify-otp',         verifyRegisterOtp);
 router.post('/login',              login);
 router.post('/verify-login-otp',   verifyLoginOtp);

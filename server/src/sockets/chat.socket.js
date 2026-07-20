@@ -59,12 +59,7 @@ export const registerChatHandlers = (io, socket) => {
       const members = await ConversationService.getConversationMembers(conversationId);
       const incrementTasks = members
         .filter((m) => m.userId._id.toString() !== userId)
-        .map(async (m) => {
-          const recipientId = m.userId._id.toString();
-          const active = await CacheService.getNotificationCount(recipientId);
-          // Only increment for members not currently viewing this conversation
-          await CacheService.incrementUnreadCount(conversationId, recipientId);
-        });
+        .map((m) => CacheService.incrementUnreadCount(conversationId, m.userId._id.toString()));
 
       await Promise.all(incrementTasks);
 

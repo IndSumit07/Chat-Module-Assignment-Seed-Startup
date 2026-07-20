@@ -138,9 +138,21 @@ export default function Sidebar({
             <Loader2 className="w-5 h-5 animate-spin text-gray-300" />
           </div>
         ) : filtered.length === 0 ? (
-          <div className="text-center text-xs text-gray-400 mt-6">
-            No conversations found.
-          </div>
+          filter ? (
+            <div className="text-center text-xs text-gray-400 mt-6 px-4">
+              No conversations match &ldquo;{filter}&rdquo;
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center text-center mt-8 px-6 gap-3">
+              <div className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center">
+                <Hash className="w-5 h-5 text-gray-300" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-600">No conversations yet</p>
+                <p className="text-xs text-gray-400 mt-0.5 leading-relaxed">Create one above or ask someone to invite you.</p>
+              </div>
+            </div>
+          )
         ) : (
           filtered.map((conv) => (
             <button

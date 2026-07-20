@@ -1,6 +1,19 @@
 import { Check, CheckCheck, Trash2, Pencil, Reply, FileText } from 'lucide-react';
 import { useState } from 'react';
 
+/**
+ * Formats a file size in bytes into a human-readable string.
+ * @param {number} bytes
+ * @returns {string}
+ */
+const formatFileSize = (bytes) => {
+  if (!bytes || bytes === 0) return '';
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+  return `${(bytes / 1024 / 1024 / 1024).toFixed(1)} GB`;
+};
+
 export default function MessageBubble({
   message,
   isOwn,
@@ -52,7 +65,7 @@ export default function MessageBubble({
         </div>
       )}
 
-      <div className={`relative max-w-[75%] flex flex-col ${isOwn ? 'items-end' : 'items-start'}`}>
+      <div className={`relative max-w-[80%] md:max-w-[75%] flex flex-col ${isOwn ? 'items-end' : 'items-start'}`}>
         
         {/* Username above the first bubble in a group */}
         {!isOwn && showSenderInfo && (
@@ -64,7 +77,7 @@ export default function MessageBubble({
         {/* Reply preview */}
         {message.replyTo && !message.replyTo.isDeleted && (
           <div
-            className={`text-xs text-gray-500 border-l-2 border-gray-300 pl-2 mb-1 truncate ${
+            className={`text-xs text-gray-500 border-l-2 border-gray-300 pl-2 mb-1 max-w-full truncate ${
               isOwn ? 'text-right opacity-70' : ''
             }`}
           >
@@ -96,16 +109,16 @@ export default function MessageBubble({
                     <img
                       src={att.url}
                       alt={att.filename}
-                      className="max-h-60 max-w-full rounded-lg object-contain cursor-pointer hover:opacity-90 transition-opacity"
+                      className="max-h-52 max-w-[240px] rounded-lg object-contain cursor-pointer hover:opacity-90 transition-opacity"
                     />
                   ) : (
-                    <div className="flex items-center gap-2 p-3 bg-black/10 rounded-lg hover:bg-black/20 transition-colors">
-                      <FileText className="w-6 h-6" />
-                      <div className="flex flex-col max-w-[150px]">
-                        <span className="text-sm font-medium truncate">{att.filename}</span>
-                        <span className="text-[10px] opacity-70">
-                          {(att.size / 1024).toFixed(1)} KB
-                        </span>
+                    <div className="flex items-center gap-2 p-3 bg-black/10 rounded-lg hover:bg-black/20 transition-colors min-w-[160px]">
+                      <FileText className="w-6 h-6 flex-shrink-0" />
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-sm font-medium truncate max-w-[120px]">{att.filename}</span>
+                        {att.size > 0 && (
+                          <span className="text-[10px] opacity-70">{formatFileSize(att.size)}</span>
+                        )}
                       </div>
                     </div>
                   )}
@@ -136,30 +149,38 @@ export default function MessageBubble({
             {statusIcon()}
           </div>
           
-          {/* Clearfix for the floated timestamp if needed */}
-          <div className="clear-both"></div>
+          {/* Clearfix for the floated timestamp */}
+          <div className="clear-both" />
         </div>
 
-        {/* Action buttons (own message hover) */}
-        {isOwn && hovering && (
-          <div className="absolute top-0 -left-20 flex items-center gap-1 bg-white border border-gray-200 rounded-lg shadow-sm px-1.5 py-1 z-10 animate-in fade-in zoom-in duration-150">
+        {/* ── Action buttons ──
+            On desktop: appear as a floating popup adjacent to the bubble.
+            On mobile: appear below the bubble as a visible row (no hover state needed). */}
+
+        {/* Own message actions */}
+        {isOwn && (
+          <div
+            className={`flex items-center gap-1 mt-1 ${
+              hovering ? 'flex' : 'hidden md:flex md:opacity-0 md:group-hover:opacity-100'
+            } md:absolute md:top-0 md:-left-20 md:mt-0 md:bg-white md:border md:border-gray-200 md:rounded-lg md:shadow-sm md:px-1.5 md:py-1 md:z-10`}
+          >
             <button
               onClick={() => onReply?.(message)}
-              className="text-gray-400 hover:text-black transition-colors p-1"
+              className="p-1.5 md:p-1 text-gray-400 hover:text-black transition-colors rounded-md hover:bg-gray-50"
               title="Reply"
             >
               <Reply className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={() => onEdit?.(message)}
-              className="text-gray-400 hover:text-black transition-colors p-1"
+              className="p-1.5 md:p-1 text-gray-400 hover:text-black transition-colors rounded-md hover:bg-gray-50"
               title="Edit"
             >
               <Pencil className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={() => onDelete?.(message._id)}
-              className="text-gray-400 hover:text-red-500 transition-colors p-1"
+              className="p-1.5 md:p-1 text-gray-400 hover:text-red-500 transition-colors rounded-md hover:bg-red-50"
               title="Delete"
             >
               <Trash2 className="w-3.5 h-3.5" />
@@ -167,12 +188,16 @@ export default function MessageBubble({
           </div>
         )}
 
-        {/* Reply button (other's message hover) */}
-        {!isOwn && hovering && (
-          <div className="absolute top-0 -right-8 flex items-center bg-white border border-gray-200 rounded-lg shadow-sm px-1.5 py-1 z-10 animate-in fade-in zoom-in duration-150">
+        {/* Other's message — reply only */}
+        {!isOwn && (
+          <div
+            className={`flex items-center gap-1 mt-1 ${
+              hovering ? 'flex' : 'hidden md:flex md:opacity-0 md:group-hover:opacity-100'
+            } md:absolute md:top-0 md:-right-8 md:mt-0 md:bg-white md:border md:border-gray-200 md:rounded-lg md:shadow-sm md:px-1.5 md:py-1 md:z-10`}
+          >
             <button
               onClick={() => onReply?.(message)}
-              className="text-gray-400 hover:text-black transition-colors p-1"
+              className="p-1.5 md:p-1 text-gray-400 hover:text-black transition-colors rounded-md hover:bg-gray-50"
               title="Reply"
             >
               <Reply className="w-3.5 h-3.5" />

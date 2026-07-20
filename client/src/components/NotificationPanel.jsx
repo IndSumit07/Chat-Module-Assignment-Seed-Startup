@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Bell, X, Check, CheckCheck, UserPlus } from 'lucide-react';
+import { Bell, X, Check, Loader2, UserPlus } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getMyNotifications, markRead, markAllRead } from '../api/notification.js';
 import { respondToInvitation } from '../api/invitation.js';
@@ -7,11 +7,7 @@ import { respondToInvitation } from '../api/invitation.js';
 /**
  * NotificationPanel — slide-in panel showing in-app notifications.
  *
- * Features:
- * - Paginated notification list
- * - Accept / Reject directly for invitation notifications
- * - Mark single / all read
- * - Live unread count badge update via socket
+ * Uses fixed positioning so it displays correctly on both mobile and desktop.
  *
  * @param {boolean}  isOpen
  * @param {Function} onClose
@@ -89,13 +85,23 @@ export default function NotificationPanel({
 
   return (
     <>
-      {/* Backdrop */}
-      <div className="fixed inset-0 z-40" onClick={onClose} />
+      {/* Backdrop — full-screen, catches clicks outside the panel */}
+      <div
+        className="fixed inset-0 z-40 bg-black/10"
+        onClick={onClose}
+        aria-hidden="true"
+      />
 
-      {/* Panel */}
-      <div className="absolute right-0 top-12 z-50 w-80 bg-white border border-gray-100 rounded-2xl shadow-xl overflow-hidden">
+      {/* Panel — fixed on screen so it works on mobile too */}
+      <div
+        role="dialog"
+        aria-label="Notifications"
+        className="fixed z-50 bg-white border border-gray-100 rounded-2xl shadow-2xl overflow-hidden
+                   bottom-0 left-0 right-0 rounded-b-none max-h-[85vh]
+                   md:bottom-auto md:left-auto md:right-4 md:top-16 md:w-80 md:max-h-[32rem] md:rounded-2xl"
+      >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-50">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 flex-shrink-0">
           <div className="flex items-center gap-2">
             <Bell className="w-4 h-4 text-black" />
             <span className="text-sm font-semibold text-black">Notifications</span>
@@ -105,7 +111,7 @@ export default function NotificationPanel({
               </span>
             )}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             {unreadCount > 0 && (
               <button
                 onClick={handleMarkAllRead}
@@ -114,18 +120,24 @@ export default function NotificationPanel({
                 Mark all read
               </button>
             )}
-            <button onClick={onClose} className="text-gray-300 hover:text-black transition-colors">
+            <button onClick={onClose} className="text-gray-300 hover:text-black transition-colors p-1">
               <X className="w-4 h-4" />
             </button>
           </div>
         </div>
 
         {/* List */}
-        <div className="max-h-96 overflow-y-auto divide-y divide-gray-50">
+        <div className="overflow-y-auto divide-y divide-gray-50 flex-1" style={{ maxHeight: 'inherit' }}>
           {loading ? (
-            <div className="py-10 text-center text-sm text-gray-400">Loading…</div>
+            <div className="py-12 flex flex-col items-center justify-center gap-2 text-gray-400">
+              <Loader2 className="w-5 h-5 animate-spin" />
+              <span className="text-sm">Loading…</span>
+            </div>
           ) : notifications.length === 0 ? (
-            <div className="py-10 text-center text-sm text-gray-400">No notifications yet</div>
+            <div className="py-12 flex flex-col items-center justify-center gap-2 text-gray-400">
+              <Bell className="w-8 h-8 opacity-20" />
+              <p className="text-sm">No notifications yet</p>
+            </div>
           ) : (
             notifications.map((n) => (
               <div
@@ -133,17 +145,25 @@ export default function NotificationPanel({
                 className={`px-4 py-3 transition-colors ${n.isRead ? 'bg-white' : 'bg-gray-50'}`}
               >
                 <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-black leading-snug">{n.title}</p>
-                    <p className="text-xs text-gray-500 mt-0.5 leading-snug line-clamp-2">{n.body}</p>
-                    <p className="text-[10px] text-gray-300 mt-1">
-                      {new Date(n.createdAt).toLocaleString()}
-                    </p>
+                  <div className="flex items-start gap-2.5 min-w-0">
+                    {n.type === 'invitation' && (
+                      <div className="flex-shrink-0 w-7 h-7 bg-black rounded-lg flex items-center justify-center mt-0.5">
+                        <UserPlus className="w-3.5 h-3.5 text-white" />
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold text-black leading-snug">{n.title}</p>
+                      <p className="text-xs text-gray-500 mt-0.5 leading-snug line-clamp-2">{n.body}</p>
+                      <p className="text-[10px] text-gray-300 mt-1">
+                        {new Date(n.createdAt).toLocaleString()}
+                      </p>
+                    </div>
                   </div>
                   {!n.isRead && (
                     <button
                       onClick={() => handleMarkRead(n._id)}
-                      className="flex-shrink-0 text-gray-300 hover:text-black transition-colors mt-0.5"
+                      className="flex-shrink-0 text-gray-300 hover:text-black transition-colors mt-0.5 p-1"
+                      title="Mark as read"
                     >
                       <Check className="w-3.5 h-3.5" />
                     </button>
@@ -151,13 +171,14 @@ export default function NotificationPanel({
                 </div>
 
                 {/* Invitation action buttons */}
-                {n.type === 'invitation' && n.data?.invitationId && (
-                  <div className="flex gap-2 mt-2">
+                {n.type === 'invitation' && n.data?.invitationId && !n.isRead && (
+                  <div className="flex gap-2 mt-2 ml-9">
                     <button
                       onClick={() => handleInvitationAction(n, 'accept')}
                       disabled={respondingId === n.data.invitationId}
-                      className="flex-1 text-xs bg-black text-white py-1.5 rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-40"
+                      className="flex-1 text-xs bg-black text-white py-1.5 rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-40 flex items-center justify-center gap-1"
                     >
+                      {respondingId === n.data.invitationId ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
                       Accept
                     </button>
                     <button

@@ -2,13 +2,14 @@ import Conversation from '../models/conversation.model.js';
 import Message from '../models/message.model.js';
 import Invitation from '../models/invitation.model.js';
 import { S3Client, DeleteObjectsCommand } from '@aws-sdk/client-s3';
+import env from '../configs/env.config.js';
 
-// Initialize S3 client for deletion
+// Initialize S3 client using centralized env config
 const s3 = new S3Client({
-  region: process.env.AWS_REGION,
+  region: env.s3.region,
   credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    accessKeyId: env.s3.accessKeyId,
+    secretAccessKey: env.s3.secretAccessKey,
   },
 });
 
@@ -198,7 +199,7 @@ export const deleteConversationFully = async (convId) => {
       try {
         await s3.send(
           new DeleteObjectsCommand({
-            Bucket: process.env.AWS_BUCKET_NAME,
+            Bucket: env.s3.bucketName,
             Delete: { Objects: batch },
           })
         );
