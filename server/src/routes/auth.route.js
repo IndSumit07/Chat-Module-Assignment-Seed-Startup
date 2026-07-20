@@ -10,6 +10,7 @@ import {
   toggleTwoFactor,
   getMe,
   logout,
+  updateProfile,
 } from '../controllers/auth.controller.js';
 import { authenticate } from '../middlewares/auth.middleware.js';
 
@@ -30,5 +31,6 @@ router.get('/me',               getMe);
 router.post('/logout',          logout);
 router.post('/change-password', changePassword);
 router.post('/toggle-2fa',      toggleTwoFactor);
+router.patch('/profile',        updateProfile);
 
 export default router;

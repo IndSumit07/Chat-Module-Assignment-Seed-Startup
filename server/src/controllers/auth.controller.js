@@ -374,3 +374,20 @@ export const logout = asyncHandler(async (req, res) => {
     })
     .json(new ApiResponse(200, 'Logged out successfully.'));
 });
+
+/**
+ * PATCH /auth/profile  [protected]
+ *
+ * Updates the authenticated user's profile (e.g. avatarUrl).
+ */
+export const updateProfile = asyncHandler(async (req, res) => {
+  const { avatarUrl } = req.body;
+  const updatedUser = await AuthService.updateProfile(req.user._id, { avatarUrl });
+
+  return res.status(200).json(
+    new ApiResponse(200, 'Profile updated successfully.', {
+      avatarUrl: updatedUser.avatarUrl,
+    })
+  );
+});
+

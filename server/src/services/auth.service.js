@@ -29,13 +29,13 @@ export const deleteUserByEmail = (email) =>
  * Marks a user as email-verified by setting isVerified to true.
  */
 export const markUserVerified = (userId) =>
-  User.findByIdAndUpdate(userId, { isVerified: true }, { new: true });
+  User.findByIdAndUpdate(userId, { isVerified: true }, { returnDocument: 'after' });
 
 /**
  * Saves a new hashed password for the given user.
  */
 export const updateUserPassword = (userId, hashedPassword) =>
-  User.findByIdAndUpdate(userId, { password: hashedPassword }, { new: true });
+  User.findByIdAndUpdate(userId, { password: hashedPassword }, { returnDocument: 'after' });
 
 /**
  * Toggles the two-factor authentication flag for a user.
@@ -44,4 +44,10 @@ export const updateUserPassword = (userId, hashedPassword) =>
  * @param {boolean} enabled  The desired 2FA state
  */
 export const toggleTwoFactor = (userId, enabled) =>
-  User.findByIdAndUpdate(userId, { twoFactorEnabled: enabled }, { new: true });
+  User.findByIdAndUpdate(userId, { twoFactorEnabled: enabled }, { returnDocument: 'after' });
+
+/**
+ * Updates public profile fields (e.g. avatarUrl).
+ */
+export const updateProfile = (userId, data) =>
+  User.findByIdAndUpdate(userId, { $set: data }, { returnDocument: 'after' });

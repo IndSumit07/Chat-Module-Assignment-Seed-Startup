@@ -2,7 +2,7 @@ import { Queue } from 'bullmq';
 import env from './env.config.js';
 
 /**
- * Shared Redis connection options used by BullMQ Queue and Worker.
+ * Shared Redis connection options used by all BullMQ Queues and Workers.
  *
  * BullMQ requires its own ioredis connections — it cannot share the app's
  * main Redis client because it uses blocking commands internally.
@@ -11,35 +11,48 @@ export const bullmqConnection = {
   host: env.redis.host,
   port: env.redis.port,
   ...(env.redis.password && { password: env.redis.password }),
-
-  // BullMQ internally retries on disconnect — set a sane max delay
   maxRetriesPerRequest: null, // Required by BullMQ
 };
 
-/** The name of the queue — all email jobs are published here */
-export const EMAIL_QUEUE_NAME = 'email';
+/** Queue names — single source of truth; imported by both producers and workers */
+export const QUEUE_NAMES = {
+  EMAIL:             'email',
+  INVITATION_EMAIL:  'invitation-email',
+  NOTIFICATION:      'notification',
+};
 
 /**
- * Email queue — producers (services) add jobs here.
- * The worker picks them up asynchronously in the background.
- *
- * Default job options:
- *   - attempts: 3   (retry up to 3 times on failure)
- *   - backoff: exponential starting at 5 seconds
- *   - removeOnComplete: keep last 100 completed jobs for inspection
- *   - removeOnFail: keep last 200 failed jobs for debugging
+ * Shared default job options applied to all queues.
+ * Individual producers can override these per-job using the add() options arg.
  */
-const emailQueue = new Queue(EMAIL_QUEUE_NAME, {
-  connection: bullmqConnection,
-  defaultJobOptions: {
-    attempts: 3,
-    backoff: {
-      type: 'exponential',
-      delay: 5000, // 5s → 10s → 20s
-    },
-    removeOnComplete: { count: 100 },
-    removeOnFail: { count: 200 },
+const defaultJobOptions = {
+  attempts: 3,
+  backoff: {
+    type: 'exponential',
+    delay: 5000, // 5s → 10s → 20s
   },
+  removeOnComplete: { count: 100 },
+  removeOnFail:     { count: 200 },
+};
+
+/** OTP emails (registration, login 2FA, password reset) */
+export const emailQueue = new Queue(QUEUE_NAMES.EMAIL, {
+  connection: bullmqConnection,
+  defaultJobOptions,
 });
 
+/** Conversation invitation emails with full HTML branding */
+export const invitationEmailQueue = new Queue(QUEUE_NAMES.INVITATION_EMAIL, {
+  connection: bullmqConnection,
+  defaultJobOptions,
+});
+
+/** In-app notification creation and real-time delivery */
+export const notificationQueue = new Queue(QUEUE_NAMES.NOTIFICATION, {
+  connection: bullmqConnection,
+  defaultJobOptions,
+});
+
+// Default export kept for backward compatibility with mail.service.js
 export default emailQueue;
+

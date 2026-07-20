@@ -4,7 +4,16 @@ import cookieParser from 'cookie-parser';
 import mongoose from 'mongoose';
 import redis from './configs/redis.config.js';
 import authRouter from './routes/auth.route.js';
+import conversationRouter from './routes/conversation.route.js';
+import invitationRouter from './routes/invitation.route.js';
+import notificationRouter from './routes/notification.route.js';
+import messageRouter from './routes/message.route.js';
+import uploadRouter from './routes/upload.route.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const app = express();
 
 // ── CORS — credentials enabled for cookie-based auth ──────────────────────────
@@ -25,7 +34,15 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // ── API routes ─────────────────────────────────────────────────────────────────
-app.use('/api/v1/auth', authRouter);
+app.use('/api/v1/auth',          authRouter);
+app.use('/api/v1/conversations', conversationRouter);
+app.use('/api/v1/invitations',   invitationRouter);
+app.use('/api/v1/notifications', notificationRouter);
+app.use('/api/v1/messages',      messageRouter);
+app.use('/api/v1/upload',        uploadRouter);
+
+// ── Static Files ───────────────────────────────────────────────────────────────
+app.use('/uploads', express.static(path.join(__dirname, '../../server/uploads')));
 
 // ── Health check — quick sanity check for all connected services ───────────────
 app.get('/health', (req, res) => {

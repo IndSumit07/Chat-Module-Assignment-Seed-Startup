@@ -6,23 +6,30 @@ import redis from './src/configs/redis.config.js';
 import { initSocket } from './src/configs/socket.config.js';
 import mongoose from 'mongoose';
 
-// Importing the mail worker registers and starts the background job processor
+// ── Background Workers — importing registers and starts each job processor ─────
 import mailWorker from './src/workers/mail.worker.js';
+import invitationWorker from './src/workers/invitation.worker.js';
+import notificationWorker from './src/workers/notification.worker.js';
 
 // Connect to MongoDB
 connectDB();
 
 const server = http.createServer(app);
 
-// Initialize Socket.io connection
-initSocket(server);
+// Bootstrap function — ensures pub/sub is initialized before listening
+const start = async () => {
+  // initSocket is async because it bootstraps the Redis pub/sub subscriber
+  await initSocket(server);
 
-server.listen(env.port, () => {
-  console.log(`Server running on port ${env.port} in mode: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`[MailWorker] Email queue worker is active`);
-});
+  server.listen(env.port, () => {
+    console.log(`Server running on port ${env.port} in mode: ${process.env.NODE_ENV || 'development'}`);
+    console.log('[Workers] Mail, Invitation, and Notification workers are active');
+  });
+};
 
-// ── Graceful shutdown — close all connections cleanly ─────────────────────────
+start();
+
+// ── Graceful shutdown — close all connections and workers cleanly ──────────────
 const gracefulShutdown = async (signal) => {
   console.log(`\nReceived ${signal}. Starting graceful shutdown...`);
 
@@ -31,12 +38,20 @@ const gracefulShutdown = async (signal) => {
     console.log('HTTP server closed.');
   });
 
-  // Let the mail worker finish its current job before stopping
-  try {
-    await mailWorker.close();
-    console.log('[MailWorker] Mail worker closed.');
-  } catch (err) {
-    console.error('[MailWorker] Error closing mail worker:', err.message);
+  // Close all workers — waits for in-progress jobs to finish
+  const workers = [
+    { worker: mailWorker, name: 'MailWorker' },
+    { worker: invitationWorker, name: 'InvitationWorker' },
+    { worker: notificationWorker, name: 'NotificationWorker' },
+  ];
+
+  for (const { worker, name } of workers) {
+    try {
+      await worker.close();
+      console.log(`[${name}] Closed.`);
+    } catch (err) {
+      console.error(`[${name}] Error closing:`, err.message);
+    }
   }
 
   // Close MongoDB connection

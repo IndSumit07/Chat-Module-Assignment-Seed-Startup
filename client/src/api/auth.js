@@ -39,3 +39,7 @@ export const toggleTwoFactor = (data) =>
 /** Clear the access token cookie and log out */
 export const logoutUser = () =>
   api.post('/auth/logout');
+
+/** Update user profile information */
+export const updateProfile = (data) =>
+  api.patch('/auth/profile', data);

@@ -1,6 +1,7 @@
 import { Worker } from 'bullmq';
 import brevoClient, { defaultSender } from '../configs/brevo.config.js';
-import { EMAIL_QUEUE_NAME, bullmqConnection } from '../configs/queue.config.js';
+import { QUEUE_NAMES, bullmqConnection } from '../configs/queue.config.js';
+
 
 /**
  * Email templates keyed by purpose.
@@ -81,7 +82,7 @@ const processEmailJob = async (job) => {
  * concurrency: 5 — allows up to 5 simultaneous Brevo API calls.
  * Keeping it low avoids hitting Brevo's rate limits in small deployments.
  */
-const mailWorker = new Worker(EMAIL_QUEUE_NAME, processEmailJob, {
+const mailWorker = new Worker(QUEUE_NAMES.EMAIL, processEmailJob, {
   connection: bullmqConnection,
   concurrency: 5,
 });

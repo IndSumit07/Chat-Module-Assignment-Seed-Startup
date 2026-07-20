@@ -8,6 +8,8 @@ import LoginPage from './pages/LoginPage.jsx';
 import ForgotPasswordPage from './pages/ForgotPasswordPage.jsx';
 import ResetPasswordPage from './pages/ResetPasswordPage.jsx';
 import DashboardPage from './pages/DashboardPage.jsx';
+import ProfilePage from './pages/ProfilePage.jsx';
+import RespondInvitationPage from './pages/RespondInvitationPage.jsx';
 
 export default function App() {
   return (
@@ -56,9 +58,26 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <ProfilePage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/invitations/:id/:action"
+            element={
+              <ProtectedRoute>
+                <RespondInvitationPage />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Catch-all */}
-          <Route path="*" element={<Navigate to="/login" replace />} />
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>
