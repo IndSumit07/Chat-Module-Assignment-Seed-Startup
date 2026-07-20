@@ -28,6 +28,18 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+
+    /** Set to true once the user confirms their email via OTP */
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
+
+    /** When enabled, a one-time OTP is required on each login */
+    twoFactorEnabled: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,
