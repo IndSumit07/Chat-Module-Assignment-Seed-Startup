@@ -42,7 +42,7 @@ We will set up an EC2 instance (Ubuntu), install Docker and Nginx, and run the N
    sudo apt install nginx -y
 
    # Install Docker and Docker Compose
-   sudo apt install docker.io docker-compose -y
+   sudo apt install docker.io docker-compose-v2 -y
    sudo systemctl enable docker
    sudo systemctl start docker
    sudo usermod -aG docker ubuntu
@@ -65,7 +65,7 @@ We will set up an EC2 instance (Ubuntu), install Docker and Nginx, and run the N
 ### C. Running with Docker Compose
 To build the server image and run both Redis and the Node API in detached mode:
 ```bash
-docker-compose up -d --build
+docker compose up -d --build
 ```
 This will expose the API internally on port `5000`.
 
@@ -120,7 +120,7 @@ Add the following content:
 #!/bin/bash
 cd /home/ubuntu/your-repo
 git pull origin main
-docker-compose up -d --build
+docker compose up -d --build
 ```
 Make it executable:
 ```bash
