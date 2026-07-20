@@ -5,7 +5,7 @@ import axios from 'axios';
  * withCredentials ensures the httpOnly accessToken cookie is sent on every request.
  */
 const api = axios.create({
-  baseURL: 'http://localhost:4000/api/v1',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:4000/api/v1',
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
