@@ -1,13 +1,20 @@
+import http from 'http';
 import app from './src/app.js';
 import env from './src/configs/env.config.js';
 import connectDB from './src/configs/mongo.config.js';
 import redis from './src/configs/redis.config.js';
+import { initSocket } from './src/configs/socket.config.js';
 import mongoose from 'mongoose';
 
 // Connect to MongoDB
 connectDB();
 
-const server = app.listen(env.port, () => {
+const server = http.createServer(app);
+
+// Initialize Socket.io connection
+initSocket(server);
+
+server.listen(env.port, () => {
   console.log(`Server running on port ${env.port} in mode: ${process.env.NODE_ENV || 'development'}`);
 });
 
