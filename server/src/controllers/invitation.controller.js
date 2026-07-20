@@ -98,7 +98,7 @@ export const inviteUser = asyncHandler(async (req, res) => {
   }
 
   // Queue invitation email (for both existing users and pending email-only invites)
-  const clientBaseUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+  const clientBaseUrl = env.clientUrl;
   await invitationEmailQueue.add('invitation-email', {
     toEmail: normalizedEmail,
     toName: targetUser?.username || normalizedEmail,

@@ -50,6 +50,8 @@ const env = {
     senderEmail: process.env.BREVO_SENDER_EMAIL,
     senderName: process.env.BREVO_SENDER_NAME,
   },
+
+  clientUrl: process.env.CLIENT_URL || 'http://localhost:5173',
 };
 
 export default env;
