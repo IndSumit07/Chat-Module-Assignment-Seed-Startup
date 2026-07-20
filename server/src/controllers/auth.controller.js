@@ -11,7 +11,7 @@ import { sendOtpEmail } from '../services/mail.service.js';
 const ACCESS_TOKEN_COOKIE_OPTIONS = {
   httpOnly: true,               // Inaccessible to client-side JS — guards against XSS
   secure: process.env.NODE_ENV === 'production',
-  sameSite: 'strict',
+  sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
   maxAge: 24 * 60 * 60 * 1000, // 24 hours in milliseconds
 };
 
@@ -370,7 +370,7 @@ export const logout = asyncHandler(async (req, res) => {
     .clearCookie('accessToken', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
     })
     .json(new ApiResponse(200, 'Logged out successfully.'));
 });

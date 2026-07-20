@@ -23,7 +23,7 @@ let io = null;
 export const initSocket = async (server) => {
   io = new Server(server, {
     cors: {
-      origin: process.env.CLIENT_URL || 'http://localhost:5173',
+      origin: true, // Allow true origin reflection for cross-origin credentials
       methods: ['GET', 'POST'],
       credentials: true,
     },
