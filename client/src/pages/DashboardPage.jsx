@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Sidebar from '../components/Sidebar.jsx';
 import ChatWindow from '../components/ChatWindow.jsx';
 import useSocket, { disconnectSocket } from '../hooks/useSocket.js';
@@ -31,18 +31,28 @@ export default function DashboardPage() {
   const [mobileView, setMobileView] = useState('sidebar'); // 'sidebar' | 'chat'
 
   // ── Initial Data Load ────────────────────────────────────────────────────────
+
+  // Use a ref so fetchConversations can read the current activeConv without
+  // needing it as a dependency (which would cause an infinite refetch loop).
+  const activeConvRef = useRef(activeConv);
+  useEffect(() => {
+    activeConvRef.current = activeConv;
+  }, [activeConv]);
+
   const fetchConversations = useCallback(async () => {
     try {
       const { data } = await getMyConversations();
-      setConversations(data.data || []);
+      const list = data.data || [];
+      setConversations(list);
 
-      // If active conversation is no longer in list (e.g. left), deselect it
-      if (activeConv && !(data.data || []).some(c => c._id === activeConv._id)) {
+      const current = activeConvRef.current;
+      if (current && !list.some(c => c._id === current._id)) {
+        // Active conversation was removed (deleted or left) — deselect
         setActiveConv(null);
         setMobileView('sidebar');
-      } else if (activeConv) {
-        // Refresh active conversation metadata
-        const updated = (data.data || []).find(c => c._id === activeConv._id);
+      } else if (current) {
+        // Refresh active conversation metadata without changing selection
+        const updated = list.find(c => c._id === current._id);
         if (updated) setActiveConv(updated);
       }
     } catch {
@@ -50,7 +60,7 @@ export default function DashboardPage() {
     } finally {
       setLoading(false);
     }
-  }, [activeConv]);
+  }, []); // stable — reads activeConv via ref, not as a dep
 
   const fetchNotificationCount = useCallback(async () => {
     try {
