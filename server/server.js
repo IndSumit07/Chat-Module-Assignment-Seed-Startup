@@ -12,6 +12,8 @@ import invitationWorker from './src/workers/invitation.worker.js';
 import notificationWorker from './src/workers/notification.worker.js';
 
 // Connect to MongoDB
+
+
 connectDB();
 
 const server = http.createServer(app);
